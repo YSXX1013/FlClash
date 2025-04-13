@@ -34,13 +34,13 @@ var (
 	}
 )
 
-func markSocket(callback unsafe.Pointer, fd int) {
+func invokeMarkSocket(callback unsafe.Pointer, fd int) {
 	if globalCallbacks.markSocketFunc != nil {
 		C.call_mark_socket(globalCallbacks.markSocketFunc, callback, C.int(fd))
 	}
 }
 
-func querySocketUid(callback unsafe.Pointer, protocol int, source, target string) int {
+func invokeQuerySocketUid(callback unsafe.Pointer, protocol int, source, target string) int {
 	if globalCallbacks.querySocketUidFunc == nil {
 		return -1
 	}
@@ -53,6 +53,7 @@ func querySocketUid(callback unsafe.Pointer, protocol int, source, target string
 
 //export registerCallbacks
 func registerCallbacks(MarkSocketFunc C.mark_socket_func, QuerySocketUidFunc C.query_socket_uid_func) {
+	println("registerCallbacks===>")
 	globalCallbacks.markSocketFunc = MarkSocketFunc
 	globalCallbacks.querySocketUidFunc = QuerySocketUidFunc
 }

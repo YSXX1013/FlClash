@@ -53,7 +53,7 @@ func (t *TunHandler) markSocket(fd int) {
 		return
 	}
 
-	markSocket(t.callback, fd)
+	invokeMarkSocket(t.callback, fd)
 }
 
 func (t *TunHandler) querySocketUid(protocol int, source, target string) int {
@@ -63,7 +63,7 @@ func (t *TunHandler) querySocketUid(protocol int, source, target string) int {
 	if t.listener == nil {
 		return -1
 	}
-	return querySocketUid(t.callback, protocol, source, target)
+	return invokeQuerySocketUid(t.callback, protocol, source, target)
 }
 
 type Fd struct {
@@ -154,15 +154,16 @@ func handleStartTun(fd int, callback unsafe.Pointer) bool {
 	} else {
 		tunLock.Lock()
 		defer tunLock.Unlock()
-		//tunHandler = &TunHandler{
-		//	callback: callback,
-		//}
+		tunHandler = &TunHandler{
+			callback: callback,
+			limit:    semaphore.NewWeighted(4),
+		}
 		initTunHook()
 		tunListener, _ := t.Start(fd, currentConfig.General.Tun.Device, currentConfig.General.Tun.Stack)
 		if tunListener != nil {
 			log.Infoln("TUN address: %v", tunListener.Address())
 		} else {
-			tunHandler.close()
+			removeTunHook()
 			return false
 		}
 		//tunHandler.listener = tunListener
